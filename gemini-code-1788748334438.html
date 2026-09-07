@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TheCompass_V12.5 (Stratified Random Box Edition)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a; --text-color: #f8fafc;
+            --green: #22c55e; --red: #ef4444;
+            --yellow: #fbbf24; --blue: #3b82f6;
+            --gray: #94a3b8; --border: #334155;
+            --panel-bg: #1e293b; 
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Prompt', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 8px; font-size: 13px; -webkit-user-select: none; }
+        .header { text-align: center; border-bottom: 2px dashed var(--gray); padding-bottom: 8px; margin-bottom: 8px; }
+        .title { color: #3b82f6; font-weight: 700; font-size: 19px; letter-spacing: 1px; }
+        .panel { border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; border-radius: 6px; background: var(--panel-bg); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .text-green { color: var(--green); } .text-red { color: var(--red); } .text-yellow { color: var(--yellow); } .text-gray { color: var(--gray); } .text-purple { color: #c084fc; } .text-blue { color: var(--blue); }
+        
+        .btn-group { display: flex; gap: 6px; margin: 8px 0; }
+        .btn { flex: 1; padding: 14px 0; font-size: 22px; font-family: 'Prompt', sans-serif; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; color: white; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+        
+        .btn-1 { background: var(--red); box-shadow: 0 4px 0 #b91c1c; }
+        .btn-2 { background: var(--yellow); box-shadow: 0 4px 0 #b45309; color: black; }
+        .btn-3 { background: var(--green); box-shadow: 0 4px 0 #15803d; }
+        .btn-4 { background: var(--blue); box-shadow: 0 4px 0 #1d4ed8; }
+        .btn-undo { background: #475569; box-shadow: 0 4px 0 #334155; font-size: 16px; }
+
+        .sys-btn-group { display: flex; gap: 8px; margin-bottom: 12px; }
+        .btn-sys { flex: 1; padding: 8px; font-size: 12px; font-family: 'Prompt', sans-serif; font-weight: 600; background: #334155; color: white; border: 1px solid var(--gray); border-radius: 4px; cursor: pointer; }
+
+        .matrix-container { overflow-x: auto; display: flex; gap: 2px; padding: 10px; background: #000; border-radius: 6px; height: 100px; scroll-behavior: smooth; border: 1px inset #334155; margin-top: 8px;}
+        .matrix-col { display: flex; flex-direction: column; gap: 2px; }
+        .matrix-cell { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: #334155; font-family: 'Prompt', sans-serif; font-weight: bold; border-radius: 3px; font-size: 13px; }
+        
+        .cell-1 { background: var(--red); color: white;} 
+        .cell-2 { background: var(--yellow); color: black;} 
+        .cell-3 { background: var(--green); color: white;} 
+        .cell-4 { background: var(--blue); color: white;}
+
+        table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 11.5px; }
+        th, td { border: 1px solid var(--border); padding: 7px 3px; text-align: center; vertical-align: middle; }
+        th { background: #334155; font-weight: 600; color: #e2e8f0; transition: background 0.2s; }
+        th[onclick]:hover { background: #475569; }
+        
+        .mode-switch-container { display: flex; align-items: center; justify-content: space-between; background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 6px; }
+        .mode-label { font-size: 12px; font-weight: 600; margin-left: 6px; }
+        .locked-row { background-color: rgba(251, 191, 36, 0.15); }
+        
+        .dna-display { display: flex; gap: 2px; justify-content: center; align-items: flex-end; height: 22px; padding: 2px 2px; margin: 0 auto; width: fit-content; }
+        .dna-bar { width: 4px; border-radius: 1px; }
+        .dna-bar.win { height: 18px; background-color: var(--green); }
+        .dna-bar.loss { height: 6px; background-color: var(--red); }
+        .lock-btn { cursor: pointer; font-size: 14px; user-select: none; }
+
+        .box-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .random-box { background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); position: relative; }
+        .box-header { width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 4px; font-weight: bold; font-size: 13px; }
+        .box-target { font-size: 18px; font-weight: bold; letter-spacing: 2px; background: #1e293b; padding: 6px 12px; border-radius: 6px; margin: 4px 0; border: 1px solid #334155; color: var(--yellow); text-shadow: 0 0 5px rgba(251, 191, 36, 0.3); }
+        .box-details { display: flex; justify-content: space-between; width: 100%; font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+        
+        .display-toggle-panel { background: #1e293b; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; gap: 20px; align-items: center; justify-content: center; }
+        .radio-label { cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title">📊 TheCompass_V12.5 <span style="font-size:12px; color:#c084fc;">[Stratified Box Edition]</span></div>
+        <div style="font-size: 10px; color: var(--gray); margin-top: 4px;">จัดอันดับ Streak ➔ แบ่ง 4 ชั้น (1-4, 5-8, 9-12, 13-16) ➔ สุ่มกลุ่มละ 1 สูตร</div>
+    </div>
+
+    <div class="sys-btn-group">
+        <button class="btn-sys" onclick="resetSystem()">🔄 ถอยทัพ (ล้างกระดาน)</button>
+        <button class="btn-sys" onclick="exportLog()">💾 บันทึกสถิติ (EXPORT)</button>
+    </div>
+
+    <div class="panel">
+        <div class="row">
+            <strong style="font-size: 14px;">📝 COMMAND PAD</strong>
+            <strong id="volume-display" class="text-yellow" style="font-family: monospace; font-size:14px;">VOL: 0</strong>
+        </div>
+        
+        <div class="mode-switch-container">
+            <div>
+                <input type="checkbox" id="reverse-mode-checkbox" checked onchange="toggleModeStyle()">
+                <span id="mode-text" class="mode-label text-yellow">🔄 โหมดคีย์ย้อนหลัง (ใหม่ ➔ เก่า)</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-1" onclick="addRecord(1)">1</button>
+            <button class="btn btn-2" onclick="addRecord(2)">2</button>
+            <button class="btn btn-3" onclick="addRecord(3)">3</button>
+            <button class="btn btn-4" onclick="addRecord(4)">4</button>
+            <button class="btn btn-undo" onclick="undoRecord()">DEL</button>
+        </div>
+        
+        <div class="matrix-container" id="matrix-road"></div>
+    </div>
+
+    <div class="display-toggle-panel">
+        <strong style="color:var(--gray); font-size:12px;">โหมดการแสดงผล:</strong>
+        <label class="radio-label">
+            <input type="radio" name="displayMode" value="box" checked onchange="toggleViewMode()"> 
+            <span class="text-yellow">🎁 4 กล่องสุ่ม (Tiered)</span>
+        </label>
+        <label class="radio-label">
+            <input type="radio" name="displayMode" value="table" onchange="toggleViewMode()"> 
+            <span class="text-blue">📊 16 สูตร</span>
+        </label>
+    </div>
+
+    <!-- โหมดแสดงผลแบบ 4 กล่องสุ่ม -->
+    <div id="box-view-container" class="box-grid"></div>
+
+    <!-- โหมดแสดงผลแบบ 16 สูตร -->
+    <div class="panel" id="table-view-container" style="display: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 6%;">Lock</th>
+                    <th style="width: 9%;">สูตร</th>
+                    <th style="width: 17%;">เป้าหมาย</th>
+                    <th id="header-wr" style="width: 15%; cursor: pointer;" onclick="handleSort('wr')">WR ⇅</th>
+                    <th id="header-streak" style="width: 20%; cursor: pointer;" onclick="handleSort('streak')">Status ⇅</th>
+                    <th style="width: 33%;">DNA (15 ล่าสุด)</th>
+                </tr>
+            </thead>
+            <tbody id="formula-table">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let historyData = [];
+        const formulas = ['S1', 'S2', 'S3', 'S4', 'R1', 'R2', 'R3', 'R4', 'A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
+        
+        // เก็บประวัติการสุ่มเลือก Index ภายใน Tier (0-3) ของแต่ละกล่องในแต่ละตา
+        let boxRandomHistory = { A: [], B: [], C: [], D: [] };
+
+        let lockedFormulas = new Set(); 
+        let currentSortField = 'streak'; 
+        let currentSortOrder = 'desc'; 
+
+        function toggleViewMode() {
+            let mode = document.querySelector('input[name="displayMode"]:checked').value;
+            if (mode === 'box') {
+                document.getElementById('box-view-container').style.display = 'grid';
+                document.getElementById('table-view-container').style.display = 'none';
+            } else {
+                document.getElementById('box-view-container').style.display = 'none';
+                document.getElementById('table-view-container').style.display = 'block';
+            }
+        }
+
+        function handleSort(field) {
+            if (currentSortField === field) {
+                currentSortOrder = currentSortOrder === 'desc' ? 'asc' : 'desc';
+            } else {
+                currentSortField = field;
+                currentSortOrder = 'desc'; 
+            }
+            updateSystem();
+        }
+
+        function addRecord(num) { 
+            let isReverseMode = document.getElementById('reverse-mode-checkbox').checked;
+            if (isReverseMode) { historyData.unshift(num); } else { historyData.push(num); }
+            updateSystem(); 
+        }
+
+        function undoRecord() { 
+            if(historyData.length > 0) { 
+                let isReverseMode = document.getElementById('reverse-mode-checkbox').checked;
+                if (isReverseMode) { historyData.shift(); } else { historyData.pop(); }
+                updateSystem(); 
+            } 
+        }
+        
+        function toggleModeStyle() {
+            let isReverseMode = document.getElementById('reverse-mode-checkbox').checked;
+            let modeText = document.getElementById('mode-text');
+            if (isReverseMode) {
+                modeText.innerText = "🔄 โหมดคีย์ย้อนหลัง (ใหม่ ➔ เก่า)"; modeText.className = "mode-label text-yellow";
+            } else {
+                modeText.innerText = "⏱️ โหมดคีย์สด (เก่า ➔ ใหม่)"; modeText.className = "mode-label text-green";
+            }
+            updateSystem();
+        }
+
+        function toggleLock(formulaId) {
+            if (lockedFormulas.has(formulaId)) { lockedFormulas.delete(formulaId); } else { lockedFormulas.add(formulaId); }
+            updateSystem(); 
+        }
+
+        function resetSystem() {
+            if (historyData.length === 0) return;
+            if (confirm("⚠️ ต้องการล้างข้อมูลกระดานนี้ใช่หรือไม่?")) {
+                historyData = []; 
+                lockedFormulas.clear(); 
+                boxRandomHistory = { A: [], B: [], C: [], D: [] };
+                updateSystem();
+            }
+        }
+
+        function exportLog() {
+            if (historyData.length === 0) return;
+            let date = new Date();
+            let dateString = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, '0') + "-" + String(date.getDate()).padStart(2, '0');
+            let content = "========================================\n 📊 TheCompass LOG (Stratified Box Edition)\n========================================\n";
+            content += "DATE   : " + date.toLocaleString('th-TH') + "\nVOLUME : " + historyData.length + " ตา\n----------------------------------------\n";
+            content += "RAW DATA:\n" + historyData.join(", ") + "\n========================================\n";
+            let blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `TheCompass_V12.5_${dateString}.txt`; link.click();
+        }
+
+        function getNormalizedHistory() {
+            let isReverseMode = document.getElementById('reverse-mode-checkbox').checked;
+            return isReverseMode ? [...historyData].reverse() : [...historyData];
+        }
+
+        // อัลกอริทึมสูตรตาข่าย 4 ชั้น
+        function getExcludedValue(f, hist) {
+            if (hist.length === 0) return 4;
+            let type = f.charAt(0);
+            let n = parseInt(f.substring(1)); 
+            if (hist.length < n) return 4;
+            
+            let sum = 0; 
+            for (let j = 1; j <= n; j++) { sum += hist[hist.length - j]; }
+            let Remainder = sum % 4; if (Remainder === 0) Remainder = 4;
+            let L = hist[hist.length - 1];
+            let Es = (L + Remainder) % 4; if (Es === 0) Es = 4;
+            
+            if (type === 'S') return Es; 
+            if (type === 'R') return 5 - Es; 
+            if (type === 'A') return {1:2, 2:1, 3:4, 4:3}[Es]; 
+            if (type === 'B') return {1:3, 2:4, 3:1, 4:2}[Es]; 
+            return Es;
+        }
+
+        function getStreaks(dna) {
+            if (dna.length === 0) return { current: 0, prev: 0, isWin: true, currentVal: 0 };
+            
+            let current = 0; let prev = 0;
+            let isWin = dna[dna.length - 1] === '✔';
+            let i = dna.length - 1;
+
+            while (i >= 0 && dna[i] === (isWin ? '✔' : '✘')) { current++; i--; }
+
+            if (i >= 0) {
+                let prevIsWin = dna[i] === '✔';
+                while (i >= 0 && dna[i] === (prevIsWin ? '✔' : '✘')) { prev++; i--; }
+                if (!prevIsWin) prev = -prev; 
+            }
+
+            let currentVal = isWin ? current : -current;
+            return { current: current, prev: prev, isWin: isWin, currentVal: currentVal };
+        }
+
+        // ฟังก์ชันจัดลำดับ 16 สูตร ตามกฎ: Streak -> WR -> Prev Streak -> Alphabetical ID
+        function sortFormulasByTierRules(formulaList) {
+            return formulaList.sort((a, b) => {
+                if (a.currentVal !== b.currentVal) return b.currentVal - a.currentVal; // 1. Streak สูงสุดก่อน
+                if (a.wr !== b.wr) return b.wr - a.wr;                                // 2. ถ้าเท่ากัน วัด WR
+                if (a.prevVal !== b.prevVal) return b.prevVal - a.prevVal;             // 3. ถ้าเท่ากัน วัด Streak ก่อนหน้า
+                return a.id.localeCompare(b.id);                                     // 4. ถ้าเท่ากันทั้งหมด เรียงตามชื่อสูตร
+            });
+        }
+
+        // คำนวณข้อมูล 16 สูตร ณ ประวัติชุดย่อย `evalHist`
+        function calculateAllFormulas(evalHist) {
+            let vol = evalHist.length;
+            let list = [];
+            formulas.forEach(f => {
+                let limit = Math.min(15, vol); 
+                let dna = []; 
+                let startIndex = vol - limit;
+                for (let i = startIndex; i < vol; i++) {
+                    let subHist = evalHist.slice(0, i);
+                    let predictedExcluded = getExcludedValue(f, subHist);
+                    let actual = evalHist[i];
+                    dna.push(actual !== predictedExcluded ? '✔' : '✘');
+                }
+
+                let wins = dna.filter(x => x === '✔').length;
+                let wr = limit > 0 ? (wins / limit) * 100 : 0;
+                let streaks = getStreaks(dna);
+                let currentTargetExcluded = getExcludedValue(f, evalHist);
+                let targetNumStr = {4:"3-2-1", 3:"2-1-4", 2:"1-4-3", 1:"4-3-2"}[currentTargetExcluded];
+                if (vol === 0) targetNumStr = "-";
+
+                list.push({ 
+                    id: f, 
+                    target: targetNumStr, 
+                    wr: wr, 
+                    streak: streaks.current, 
+                    isWin: streaks.isWin, 
+                    currentVal: streaks.currentVal, 
+                    prevVal: streaks.prev, 
+                    dna: dna 
+                });
+            });
+            return sortFormulasByTierRules(list);
+        }
+
+        function updateSystem() { 
+            let container = document.getElementById('matrix-road');
+            container.innerHTML = ''; 
+            
+            let normHist = getNormalizedHistory(); 
+            let vol = normHist.length;
+            document.getElementById('volume-display').innerText = `VOL: ${vol}`;
+
+            if (vol > 0) {
+                let cols = [], currentCol = [], lastVal = null;
+                historyData.forEach(val => {
+                    if (val === lastVal || lastVal === null) { currentCol.push(val); } else { cols.push(currentCol); currentCol = [val]; }
+                    lastVal = val;
+                });
+                if (currentCol.length > 0) cols.push(currentCol);
+                cols.forEach(colData => {
+                    let colDiv = document.createElement('div'); colDiv.className = 'matrix-col';
+                    colData.forEach(val => {
+                        let cell = document.createElement('div'); cell.className = `matrix-cell cell-${val}`; cell.innerText = val; colDiv.appendChild(cell);
+                    });
+                    container.appendChild(colDiv);
+                });
+                setTimeout(() => { container.scrollLeft = container.scrollWidth; }, 50);
+            }
+
+            // จัดการ Random Tier Selection Index (0-3) ของแต่ละกล่อง ให้เสถียรตาม Volume
+            ['A', 'B', 'C', 'D'].forEach(groupId => {
+                if (boxRandomHistory[groupId].length > vol + 1) {
+                    boxRandomHistory[groupId].length = vol + 1; 
+                }
+                while (boxRandomHistory[groupId].length < vol + 1) {
+                    boxRandomHistory[groupId].push(Math.floor(Math.random() * 4)); // สุ่มตำแหน่ง 0-3 ใน Tier ของตัวเอง
+                }
+            });
+
+            // =========================
+            // ส่วนที่ 1: ประมวลผล 4 กล่องสุ่มแบบ Stratified Tier
+            // =========================
+            let boxStats = [];
+            ['A', 'B', 'C', 'D'].forEach((groupId, groupIdx) => {
+                let limit = Math.min(15, vol);
+                let dna = [];
+                let startIndex = vol - limit;
+
+                // จำลอง DNA ย้อนหลัง 15 ตาของกล่องนี้
+                for (let i = startIndex; i < vol; i++) {
+                    let subHist = normHist.slice(0, i);
+                    let sortedListAtStep = calculateAllFormulas(subHist);
+                    
+                    let tierFormulas = sortedListAtStep.slice(groupIdx * 4, (groupIdx + 1) * 4);
+                    let selectedIdx = boxRandomHistory[groupId][i] % tierFormulas.length;
+                    let chosenFormula = tierFormulas[selectedIdx];
+
+                    let actual = normHist[i];
+                    let predictedExcluded = getExcludedValue(chosenFormula.id, subHist);
+                    dna.push(actual !== predictedExcluded ? '✔' : '✘');
+                }
+
+                // สถานะกล่องปัจจุบัน (ที่ตา vol)
+                let currentSortedList = calculateAllFormulas(normHist);
+                let currentTier = currentSortedList.slice(groupIdx * 4, (groupIdx + 1) * 4);
+                let currentSelectedIdx = boxRandomHistory[groupId][vol] % currentTier.length;
+                let activeFormulaObj = currentTier[currentSelectedIdx];
+
+                let wins = dna.filter(x => x === '✔').length;
+                let wr = limit > 0 ? (wins / limit) * 100 : 0;
+                let streaks = getStreaks(dna);
+
+                let targetNumStr = activeFormulaObj ? activeFormulaObj.target : "-";
+                if (vol === 0) targetNumStr = "-";
+
+                boxStats.push({ 
+                    id: groupId, 
+                    formulaName: activeFormulaObj ? activeFormulaObj.id : "-", 
+                    target: targetNumStr, 
+                    wr: wr, 
+                    streak: streaks.current, 
+                    isWin: streaks.isWin, 
+                    dna: dna,
+                    tierRange: `${groupIdx * 4 + 1}-${(groupIdx + 1) * 4}`
+                });
+            });
+            renderBoxView(boxStats);
+
+            // =========================
+            // ส่วนที่ 2: ประมวลผลตาราง 16 สูตร
+            // =========================
+            let headerWr = document.getElementById('header-wr');
+            let headerStreak = document.getElementById('header-streak');
+            if (currentSortField === 'wr') {
+                headerWr.innerHTML = `WR ${currentSortOrder === 'desc' ? '▼' : '▲'}`; headerStreak.innerHTML = `Status ⇅`;
+                headerWr.style.color = 'var(--yellow)'; headerStreak.style.color = '#e2e8f0';
+            } else if (currentSortField === 'streak') {
+                headerWr.innerHTML = `WR ⇅`; headerStreak.innerHTML = `Status ${currentSortOrder === 'desc' ? '▼' : '▲'}`;
+                headerWr.style.color = '#e2e8f0'; headerStreak.style.color = 'var(--yellow)';
+            }
+
+            let formulaStats = calculateAllFormulas(normHist);
+
+            // เรียงลำดับแสดงผลในตาราง 16 สูตร ตามโหมดที่ผู้ใช้กดเลือกหัวตาราง (หรือค่าเริ่มต้น Streak)
+            formulaStats.sort((a, b) => {
+                let aLocked = lockedFormulas.has(a.id); let bLocked = lockedFormulas.has(b.id);
+                if (aLocked && !bLocked) return -1; if (!aLocked && bLocked) return 1;
+
+                if (currentSortField === 'wr') {
+                    if (a.wr !== b.wr) return currentSortOrder === 'desc' ? b.wr - a.wr : a.wr - b.wr;
+                    if (a.currentVal !== b.currentVal) return b.currentVal - a.currentVal;
+                    return b.prevVal - a.prevVal;
+                } else if (currentSortField === 'streak') {
+                    if (a.currentVal !== b.currentVal) return currentSortOrder === 'desc' ? b.currentVal - a.currentVal : a.currentVal - b.currentVal;
+                    if (a.wr !== b.wr) return b.wr - a.wr;
+                    return b.prevVal - a.prevVal;
+                }
+                return 0;
+            });
+
+            renderTableView(formulaStats);
+        }
+
+        function renderBoxView(boxStats) {
+            let container = document.getElementById('box-view-container');
+            container.innerHTML = '';
+            
+            boxStats.forEach((stat) => {
+                let displayDna = stat.dna.slice(-15);
+                let dnaHtml = displayDna.map(x => {
+                    return x === '✔' ? `<div class="dna-bar win" title="ถูก"></div>` : `<div class="dna-bar loss" title="ผิด"></div>`;
+                }).join('');
+                if (stat.dna.length === 0) dnaHtml = '<span class="text-gray">-</span>';
+
+                let streakDisplay = '-';
+                if (stat.dna.length > 0) {
+                    streakDisplay = stat.isWin ? `<span class="text-green">+${stat.streak}W</span>` : `<span class="text-purple">-${stat.streak}L</span>`;
+                }
+
+                let fColor = "#ffffff";
+                if (stat.formulaName.startsWith('R')) fColor = "var(--yellow)";
+                if (stat.formulaName.startsWith('A')) fColor = "var(--green)";
+                if (stat.formulaName.startsWith('B')) fColor = "var(--blue)";
+
+                let boxHTML = `
+                    <div class="random-box">
+                        <div class="box-header">
+                            <span class="text-purple">🎁 กล่อง ${stat.id} <span style="font-size:9px; color:var(--gray);">(อันดับ ${stat.tierRange})</span></span>
+                            <span style="font-size:11px; color:${fColor};">สุ่มได้: ${stat.formulaName}</span>
+                        </div>
+                        <div class="box-target">${stat.target}</div>
+                        <div class="box-details">
+                            <span class="text-yellow">WR: ${stat.wr.toFixed(0)}%</span>
+                            <span>Status: ${streakDisplay}</span>
+                        </div>
+                        <div style="width: 100%; border-top: 1px dashed var(--border); padding-top: 4px;">
+                            <div class="dna-display">${dnaHtml}</div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += boxHTML;
+            });
+        }
+
+        function renderTableView(formulaStats) {
+            let tbody = document.getElementById('formula-table'); tbody.innerHTML = '';
+            formulaStats.forEach(stat => {
+                let tr = document.createElement('tr'); if (lockedFormulas.has(stat.id)) tr.className = "locked-row";
+
+                let displayDna = stat.dna.slice(-15);
+                let dnaHtml = displayDna.map(x => {
+                    return x === '✔' ? `<div class="dna-bar win" title="ถูก"></div>` : `<div class="dna-bar loss" title="ผิด"></div>`;
+                }).join('');
+                if (stat.dna.length === 0) dnaHtml = '<span class="text-gray">-</span>';
+
+                let wrColorClass = stat.wr >= 80 ? "text-yellow" : (stat.wr <= 20 ? "text-purple" : (stat.wr >= 60 ? "text-green" : "text-gray"));
+                let lockIcon = lockedFormulas.has(stat.id) ? "🔒" : "🔓";
+                
+                let streakDisplay = '<span class="text-gray">-</span>';
+                if (stat.dna.length > 0) {
+                    streakDisplay = stat.isWin ? `<span class="text-green">🔥 ${stat.streak}</span>` : `<span class="text-purple">💀 ${stat.streak}</span>`;
+                }
+
+                let displayColor = "#ffffff";
+                if (stat.id.startsWith('R')) displayColor = "var(--yellow)";
+                if (stat.id.startsWith('A')) displayColor = "var(--green)";
+                if (stat.id.startsWith('B')) displayColor = "var(--blue)";
+                let displayId = `<span style="color:${displayColor};">${stat.id}</span>`;
+
+                tr.innerHTML = `
+                    <td class="lock-btn" onclick="toggleLock('${stat.id}')">${lockIcon}</td>
+                    <td style="font-family: 'Prompt', sans-serif; font-size:11.5px; font-weight:bold; white-space: nowrap;">${displayId}</td>
+                    <td style="font-weight: 600; font-size:11.5px; white-space: nowrap;">${stat.target}</td>
+                    <td class="${wrColorClass}" style="font-weight: bold; font-size:11.5px; white-space: nowrap;">${stat.wr.toFixed(0)}%</td>
+                    <td style="font-weight: bold; font-size: 11.5px; white-space: nowrap;">${streakDisplay}</td>
+                    <td><div class="dna-display">${dnaHtml}</div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('reverse-mode-checkbox').checked = true;
+        toggleModeStyle(); updateSystem();
+    </script>
+</body>
+</html>
